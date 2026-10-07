@@ -1,9 +1,10 @@
 {
-  "name": "opencode-nvim",
+  "name": "@nandobfer/opencode-nvim",
   "version": "0.1.0",
   "description": "OpenCode command that opens the current project in Neovim from the Ctrl+P palette.",
   "type": "module",
   "license": "MIT",
+  "author": "nandobfer",
   "keywords": [
     "opencode",
     "opencode-plugin",
@@ -11,6 +12,14 @@
     "neovim",
     "editor"
   ],
+  "homepage": "https://github.com/nandobfer/opencode-nvim#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nandobfer/opencode-nvim.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nandobfer/opencode-nvim/issues"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./tui": "./src/tui.ts"
@@ -18,6 +27,9 @@
   "files": [
     "src"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@opencode/plugin": "latest"
   },

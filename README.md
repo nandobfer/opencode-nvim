@@ -12,8 +12,12 @@ TUI when you quit Neovim.
 
 ## Install
 
-The plugin is a normal npm package with a TUI entrypoint (`opencode-nvim/tui`).
-Pick whichever loading style fits your setup.
+The plugin is a normal npm package with a TUI entrypoint
+(`@nandobfer/opencode-nvim/tui`). Pick whichever loading style fits your setup.
+
+> The package is **not published to npm yet**, so the local-checkout method is
+> the one that works today. The npm forms below become available once it is
+> published.
 
 ### CLI-only (recommended)
 
@@ -22,7 +26,7 @@ is connected to a remote OpenCode server:
 
 ```json title="~/.config/opencode/cli.json"
 {
-  "plugins": ["opencode-nvim"]
+  "plugins": ["@nandobfer/opencode-nvim"]
 }
 ```
 
@@ -34,14 +38,13 @@ automatically:
 ```jsonc title="opencode.jsonc"
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["opencode-nvim"]
+  "plugins": ["@nandobfer/opencode-nvim"]
 }
 ```
 
-### Local development
+### Local checkout (works today)
 
-OpenCode also auto-discovers plugins under the global config directory and the
-project's `.opencode` directory. Either register the checkout directly:
+Register the checkout by absolute path:
 
 ```json title="~/.config/opencode/cli.json"
 {
@@ -49,7 +52,9 @@ project's `.opencode` directory. Either register the checkout directly:
 }
 ```
 
-or drop the package in a discovery path:
+OpenCode also auto-discovers plugins under the global config directory and the
+project's `.opencode` directory, so you can drop the package in a discovery
+path instead:
 
 ```text
 <project>/.opencode/plugins/opencode-nvim/tui.ts
@@ -73,7 +78,7 @@ Pass options through the object form of the plugin entry:
 {
   "plugins": [
     {
-      "package": "opencode-nvim",
+      "package": "@nandobfer/opencode-nvim",
       "options": {
         "command": "nvim",
         "args": [],
