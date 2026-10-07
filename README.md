@@ -103,7 +103,7 @@ The plugin registers a palette command with `context.keymap.layer(...)`. When it
 runs, it calls `context.renderer.suspend()` to leave the alternate screen and
 stop drawing, spawns the editor with inherited stdio so it owns the terminal,
 then calls `context.renderer.resume()` in a `finally` block. There is no server
-side; `src/index.ts` is a no-op entrypoint that only exists so the package can
+side; `index.ts` is a no-op entrypoint that only exists so the package can
 also be loaded from `opencode.json`.
 
 ## Development

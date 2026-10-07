@@ -21,11 +21,12 @@
     "url": "https://github.com/nandobfer/opencode-nvim/issues"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./tui": "./src/tui.ts"
+    ".": "./index.ts",
+    "./tui": "./tui.ts"
   },
   "files": [
-    "src"
+    "index.ts",
+    "tui.ts"
   ],
   "publishConfig": {
     "access": "public"
