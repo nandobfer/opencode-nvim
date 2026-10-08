@@ -4,6 +4,13 @@ import { Plugin } from "@opencode/plugin/tui"
 
 const DEFAULT_COMMAND = "nvim"
 
+/**
+ * Standard binary directories, appended to PATH so the editor is found even
+ * when OpenCode runs with a minimal environment (desktop launchers, services,
+ * or a client whose shell never sourced its rc files).
+ */
+const PATH_FALLBACK = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 function stringOption(options: Readonly<Record<string, any>>, key: string): string | undefined {
   const value = options[key]
   return typeof value === "string" && value.length > 0 ? value : undefined
@@ -19,6 +26,20 @@ function shellQuote(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`
 }
 
+/** Prepends a PATH export that keeps the current PATH and appends the standard dirs. */
+function pathPrefix(): string {
+  return `export PATH="\${PATH:+$PATH:}${PATH_FALLBACK}"; `
+}
+
+function execCommand(command: string, args: string[]): string {
+  return `exec ${[command, ...args].map(shellQuote).join(" ")}`
+}
+
+function shellArguments(shell: string, line: string): string[] {
+  const name = shell.split("/").pop() ?? shell
+  return name === "sh" || name === "dash" ? ["-c", line] : ["-lc", line]
+}
+
 interface OpenInput {
   command: string
   args: string[]
@@ -31,12 +52,10 @@ interface OpenInput {
  * where the project directory exists on the server but not on the client.
  */
 function openRemote(context: Plugin.Context, input: OpenInput, ssh: string, sshArgs: string[]): void {
-  const remoteCommand = [
-    input.directory ? `cd ${shellQuote(input.directory)}` : undefined,
-    `exec ${[input.command, ...input.args].map(shellQuote).join(" ")}`,
-  ]
-    .filter((part): part is string => part !== undefined)
-    .join(" && ")
+  const remoteCommand =
+    pathPrefix() +
+    (input.directory ? `cd ${shellQuote(input.directory)} && ` : "") +
+    execCommand(input.command, input.args)
 
   const result = spawnSync("ssh", [...sshArgs, "-t", ssh, remoteCommand], { stdio: "inherit" })
 
@@ -58,12 +77,21 @@ function openRemote(context: Plugin.Context, input: OpenInput, ssh: string, sshA
       message: `SSH to "${ssh}" failed. Check the host and your SSH keys.`,
       variant: "error",
     })
+    return
+  }
+
+  if (result.status === 127) {
+    context.ui.toast.show({
+      message: `Could not find "${input.command}" on "${ssh}". Install it there or set the "command" option to an absolute path.`,
+      variant: "error",
+    })
   }
 }
 
 /**
- * Runs the editor on the machine where the TUI runs. Only valid when that
- * machine holds the project files.
+ * Runs the editor on the machine where the TUI runs, inside the user's login
+ * shell so it sees the same environment as an interactive terminal. Only valid
+ * when that machine holds the project files.
  */
 function openLocal(context: Plugin.Context, input: OpenInput): void {
   if (input.directory && !existsSync(input.directory)) {
@@ -74,7 +102,9 @@ function openLocal(context: Plugin.Context, input: OpenInput): void {
     return
   }
 
-  const result = spawnSync(input.command, input.args, {
+  const shell = process.env.SHELL || "/bin/sh"
+  const line = pathPrefix() + execCommand(input.command, input.args)
+  const result = spawnSync(shell, shellArguments(shell, line), {
     stdio: "inherit",
     ...(input.directory ? { cwd: input.directory } : {}),
   })
@@ -84,8 +114,17 @@ function openLocal(context: Plugin.Context, input: OpenInput): void {
     context.ui.toast.show({
       message:
         code === "ENOENT"
-          ? `Could not find "${input.command}". Install it or set the "command" option.`
+          ? `Could not find the shell "${shell}".`
           : `Failed to open "${input.command}": ${result.error.message}`,
+      variant: "error",
+    })
+    return
+  }
+
+  // A shell reports "command not found" with exit status 127.
+  if (result.status === 127) {
+    context.ui.toast.show({
+      message: `Could not find "${input.command}". Install it or set the "command" option to an absolute path.`,
       variant: "error",
     })
   }

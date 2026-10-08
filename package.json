@@ -1,6 +1,6 @@
 {
   "name": "@nandobfer/opencode-nvim",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OpenCode command that opens the current project in Neovim from the Ctrl+P palette.",
   "type": "module",
   "license": "MIT",

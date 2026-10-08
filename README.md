@@ -13,6 +13,11 @@ open the editor on that server over SSH.
   the OpenCode server with the [`ssh` option](#remote-server-ssh).
 - For remote use, working SSH access from the TUI machine to the server.
 
+The editor is launched through your login shell (`$SHELL -lc`) with the standard
+binary directories appended to `PATH`, so it is found even when OpenCode starts
+with a minimal environment (a desktop launcher, a service, or a client whose
+shell never sourced its rc files).
+
 ## Install
 
 The plugin is a normal npm package with a TUI entrypoint
@@ -132,12 +137,14 @@ over SSH (key authentication or an SSH config alias both work).
 
 The plugin registers a palette command with `context.keymap.layer(...)`. When it
 runs, it calls `context.renderer.suspend()` to leave the alternate screen and
-stop drawing, spawns the editor with inherited stdio so it owns the terminal,
-then calls `context.renderer.resume()` in a `finally` block. Without `ssh` it
-spawns the editor directly; with `ssh` it spawns `ssh -t <target> ...`, which
-forwards the terminal to the server. There is no server side; `index.ts` is a
-no-op entrypoint that only exists so the package can also be loaded from
-`opencode.json`.
+stop drawing, hands the terminal to the editor with inherited stdio, then calls
+`context.renderer.resume()` in a `finally` block. Without `ssh` it runs the
+editor through your login shell (`$SHELL -lc`); with `ssh` it runs
+`ssh -t <target> ...`, which forwards the terminal to the server. In both cases
+it appends the standard binary directories to `PATH`, so the editor is found
+even when OpenCode starts with a minimal environment. There is no server side;
+`index.ts` is a no-op entrypoint that only exists so the package can also be
+loaded from `opencode.json`.
 
 ## Development
 
